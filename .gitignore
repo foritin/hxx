@@ -1,0 +1,11 @@
+__pycache__
+.venv
+.idea
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.DS_Store
+.pytest_cache
+*.lock
+*.pyc
+

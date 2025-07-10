@@ -1,0 +1,25 @@
+{
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+    },
+    "flake8.args": [
+        "--max-line-length=120",
+        "--ignore=E501,E203,W503,F823,F841"
+    ],
+    "black-formatter.args": [
+        "--line-length",
+        "200"
+    ],
+    "black-formatter.enabled": true,
+    "python.sortImports.path": "isort"
+}
