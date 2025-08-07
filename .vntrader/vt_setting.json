@@ -1,8 +1,0 @@
-{
-    "database.name": "mysql",
-    "database.database": "vnpy",
-    "database.host": "localhost",
-    "database.port": 3306,
-    "database.user": "root",
-    "database.password": "123456"
-} 

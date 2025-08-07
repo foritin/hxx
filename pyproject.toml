@@ -1,131 +1,21 @@
-[tool.poetry]
-name = "factor-analysis"
+[project]
+name = "hxx"
 version = "0.1.0"
-description = "因子分析系统"
-authors = ["Your Name <your.email@example.com>"]
+description = "Add your description here"
 readme = "README.md"
-packages = [{ include = "engine" }, { include = "module" }]
-homepage = "https://github.com/hxx-dev/factor-analysis"
-repository = "https://github.com/hxx-dev/factor-analysis"
-documentation = "https://factor-analysis.readthedocs.io"
-keywords = ["python", "因子"]
-classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-]
-
-[tool.poetry.dependencies]
-python = ">=3.13,<3.14"
-akshare = "*"
-polars = "*"
-pyarrow = "*"
-yfinance = "*"
-tenacity = "*"
-vnpy = "^4.1.0"
-importlib_metadata = "*"
-vnpy_mysql = "*"
-alphalens-reloaded = "*"  # 暂时注释，因为其依赖empyrical与Python 3.13不兼容
-
-# requests = "^2.31.0"
-# numpy = "^1.24.0"
-# pandas = "^2.0.0"
-# fastapi = "^0.100.0"
-# pydantic = "^2.0.0"
-
-[tool.poetry.group.dev.dependencies]
-# 开发依赖
-pytest = "^7.4.0"
-pytest-cov = "^4.1.0"
-black = "^23.7.0"
-flake8 = "^6.0.0"
-mypy = "^1.5.0"
-pre-commit = "^3.3.0"
-# 在这里添加更多开发依赖
-isort = "^5.12.0"
-# bandit = "^1.7.0"
-# sphinx = "^7.1.0"
-
-[tool.poetry.group.test.dependencies]
-# 测试相关依赖
-pytest-asyncio = "^0.21.0"
-pytest-mock = "^3.11.0"
-factory-boy = "^3.3.0"
-
-[tool.poetry.scripts]
-# 可执行脚本定义
-# hxx = "hxx.main:main"
-# hxx-cli = "hxx.cli:cli"
-
-[tool.poetry.extras]
-# 可选功能依赖组
-# web = ["fastapi", "uvicorn"]
-# database = ["sqlalchemy", "psycopg2"]
-# ml = ["scikit-learn", "tensorflow"]
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-# 工具配置
-[tool.black]
-line-length = 88
-target-version = ['py312']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-known_first_party = ["engine", "module"]
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-
-[tool.mypy]
-python_version = "3.12"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-
-[tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q --strict-markers --cov=engine --cov=module"
-testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-
-[tool.coverage.run]
-source = ["engine", "module"]
-omit = ["*/tests/*", "*/test_*"]
-
-[tool.coverage.report]
-exclude_lines = [
-  "pragma: no cover",
-  "def __repr__",
-  "raise AssertionError",
-  "raise NotImplementedError",
+requires-python = ">=3.13"
+dependencies = [
+    "polars>=1.32.0",
+    "pyarrow>=21.0.0",
+    "requests>=2.32.4",
+    "tenacity>=9.1.2",
+    "yfinance>=0.2.65",
+    "pandas-ta>=0.3.14b0",
+    "setuptools>=80.9.0",
+    "importlib-metadata>=8.7.0",
+    "akshare>=1.17.26",
+    "ccxt>=4.4.98",
+    "python-box>=7.3.2",
+    "pydantic>=2.11.7",
+    "loguru>=0.7.0",
 ]

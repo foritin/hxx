@@ -1,136 +1,107 @@
-# 🚀 Python项目配置指南
+# HXX - 多数据源量化回测框架
 
-## 📋 项目概述
+## 项目简介
 
-这是一个使用Poetry管理依赖的Python项目，配置了自动格式化工具（Black + isort）和VS Code开发环境。
+HXX 是一个基于 Python 的多数据源量化交易回测框架，支持币安期货数据下载、处理和策略回测。
 
-## 🛠️ 开发环境设置
+## 主要特性
 
-### 1. 安装依赖
+- **多数据源支持**: 支持币安期货数据、A股数据等多种数据源
+- **高性能数据处理**: 使用 Polars 和 PyArrow 进行高效数据处理
+- **模块化设计**: 清晰的模块结构，易于扩展和维护
+- **策略回测**: 完整的回测引擎，支持多种交易策略
+- **数据管理**: 自动数据下载、缓存和管理
 
-```bash
-# 安装Poetry（如果还没有）
-curl -sSL https://install.python-poetry.org | python3 -
-
-# 安装项目依赖
-poetry install
-
-# 激活虚拟环境
-poetry shell
-```
-
-### 2. VS Code配置
-
-项目已经配置了`.vscode/settings.json`，包含：
-- ✅ Python解释器自动检测
-- ✅ 保存时自动格式化（Black + isort）
-- ✅ 自动组织导入语句
-- ✅ 代码检查（flake8 + mypy）
-- ✅ 项目路径配置
-
-### 3. 代码格式化
-
-#### 自动格式化（推荐）
-- 在VS Code中编辑Python文件时，保存文件会自动：
-  - 使用Black格式化代码
-  - 使用isort整理导入语句
-
-#### 手动格式化
-```bash
-# 格式化所有代码
-poetry run black .
-
-# 整理导入语句
-poetry run isort .
-
-# 代码检查
-poetry run flake8 .
-poetry run mypy .
-```
-
-## 🗂️ 项目结构
+## 项目结构
 
 ```
 hxx/
-├── engine/          # 核心引擎模块
-│   └── __init__.py
-├── module/          # 业务逻辑模块
-│   └── __init__.py
-├── main.py          # 主程序入口
-├── pyproject.toml   # Poetry配置和工具设置
-├── .vscode/         # VS Code配置
-│   └── settings.json
-└── README.md        # 项目说明
+├── extend/                 # 核心扩展模块
+│   ├── api/               # 策略API接口
+│   ├── core/              # 核心回测引擎
+│   ├── data/              # 数据处理模块
+│   └── utils.py           # 工具函数
+├── script/                # 数据下载脚本
+│   ├── download_binance_data.py     # 币安数据下载
+│   ├── binance_futures_data.py     # 币安期货数据处理
+│   └── cn_stock_full_presistent.py # A股数据处理
+├── resource/              # 资源文件
+│   ├── data/              # 数据存储
+│   └── package/           # 依赖包
+├── output/                # 输出目录
+└── main.py                # 主程序入口
 ```
 
-## 🎯 运行程序
+## 依赖要求
+
+- Python >= 3.13
+- polars >= 1.32.0
+- pyarrow >= 21.0.0
+- pandas-ta >= 0.3.14b0
+- ccxt >= 4.4.98
+- akshare >= 1.17.26
+- loguru >= 0.7.0
+- pydantic >= 2.11.7
+
+## 安装
 
 ```bash
-# 在项目根目录执行
+# 克隆项目
+git clone <repository-url>
+cd hxx
+
+# 安装依赖
+uv sync
+```
+
+## 使用方法
+
+### 下载币安数据
+
+```bash
+# 运行币安数据下载脚本
+python script/download_binance_data.py
+```
+
+### 运行回测
+
+```bash
+# 运行主程序
 python main.py
-
-# 或者使用poetry
-poetry run python main.py
 ```
 
-## 📦 依赖管理
+## 核心模块
 
-### 添加新依赖
+### 回测引擎 (extend/core/backtest_engine.py)
+- 多数据源回测支持
+- 可配置的回测参数
+- 自动数据对齐和处理
 
-```bash
-# 添加生产依赖
-poetry add requests numpy pandas
+### 数据管理 (extend/data/)
+- 统一的数据加载接口
+- 支持多种数据格式
+- 数据缓存机制
 
-# 添加开发依赖
-poetry add --group dev pytest-xdist sphinx
+### 策略API (extend/api/strategy_api.py)
+- 标准化的策略接口
+- 丰富的交易功能
+- 完整的风险管理
 
-# 添加测试依赖
-poetry add --group test pytest-mock
-```
+## 配置说明
 
-### 更新依赖
+项目支持灵活的配置系统，主要配置项包括：
 
-```bash
-# 更新所有依赖
-poetry update
+- 数据源配置
+- 回测参数配置
+- 品种特定配置
+- 调试和日志配置
 
-# 更新特定依赖
-poetry update requests
-```
+## 开发指南
 
-## 🔧 工具配置
+1. **添加新数据源**: 在 `extend/data/` 目录下创建新的数据源类
+2. **开发策略**: 使用 `extend/api/strategy_api.py` 中的接口
+3. **扩展功能**: 在 `extend/core/` 目录下添加新的核心功能
 
-### Black配置
-- 行长度: 88字符
-- 目标Python版本: 3.13
-- 排除目录: `.eggs`, `.git`, `.mypy_cache`, `.tox`, `.venv`, `build`, `dist`
+## 许可证
 
-### isort配置
-- 兼容Black的配置
-- 自动识别第一方包: `engine`, `module`
-- 多行导入风格: 3
-
-### MyPy配置
-- 严格类型检查
-- 警告未使用的配置
-- 不允许未类型化的函数定义
-
-## 📝 开发建议
-
-1. **编码规范**: 项目使用Black和isort自动格式化，请保持代码风格一致
-2. **类型提示**: 推荐使用类型提示，MyPy会进行静态类型检查
-3. **测试**: 在`tests/`目录添加测试文件，使用pytest运行测试
-4. **文档**: 为函数和类添加文档字符串
-
-## 🚀 快速开始
-
-1. 克隆项目后运行 `poetry install`
-2. 在VS Code中打开项目
-3. 创建新的Python文件时会自动应用格式化配置
-4. 编辑代码时保存文件会自动格式化
-
-## 💡 提示
-
-- 如果VS Code没有自动检测到Python解释器，请手动选择`.venv/bin/python`
-- 格式化工具的配置在`pyproject.toml`中，可以根据需要调整
-- 建议安装VS Code的Python扩展和Black Formatter扩展
+MIT License

@@ -8,4 +8,6 @@ __pycache__
 .pytest_cache
 *.lock
 *.pyc
-
+.vntrader
+resource/data/swap
+.claude
