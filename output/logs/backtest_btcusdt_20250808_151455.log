@@ -1,0 +1,33 @@
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:prepare_log_file:97 - 多数据源回测日志 - 2025-08-08 15:14:55
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:prepare_log_file:98 - 回测品种: btcusdt
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:prepare_log_file:99 - ================================================================================
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:log_message:109 - Fetching data for backtest...
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:log_message:109 - 
+Fetching data...
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:log_message:109 - Added data source for btcusdt 30m
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:log_message:109 - Running backtest...
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:log_message:109 - Backtest data length: 27984
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:log_message:109 - 处理第 0/27984 条数据
+2025-08-08 15:14:55 | INFO     | extend.core.backtest_logger:log_message:109 - 数据源 #0: 时间=2024-01-01 00:00:00, 价格=42458.50, 持仓=0
+2025-08-08 15:17:33 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 42825.20
+2025-08-08 15:17:46 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 42887.50
+2025-08-08 15:17:47 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 42898.90
+2025-08-08 15:17:47 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 43268.00
+2025-08-08 15:17:48 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 43359.90
+2025-08-08 15:17:49 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 43593.20
+2025-08-08 15:17:49 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 43815.00
+2025-08-08 15:17:50 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 43915.50
+2025-08-08 15:17:51 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 44100.00
+2025-08-08 15:17:51 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 44266.00
+2025-08-08 15:17:52 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 44971.00
+2025-08-08 15:17:52 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45376.00
+2025-08-08 15:17:53 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45485.70
+2025-08-08 15:17:53 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45549.20
+2025-08-08 15:17:54 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45565.00
+2025-08-08 15:17:54 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45832.80
+2025-08-08 15:17:55 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45900.00
+2025-08-08 15:17:56 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45905.90
+2025-08-08 15:17:56 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45950.00
+2025-08-08 15:17:56 | INFO     | extend.core.backtest_logger:log_message:109 - 处理第 100/27984 条数据
+2025-08-08 15:17:56 | INFO     | extend.core.backtest_logger:log_message:109 - 数据源 #0: 时间=2024-01-03 02:00:00, 价格=45353.00, 持仓=0
+2025-08-08 15:18:09 | INFO     | extend.core.backtest_logger:log_message:109 - 开多: 2手 @ 45463.50

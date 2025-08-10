@@ -1,5 +1,5 @@
 import polars as pl
-from typing import Optional, Any
+from typing import Dict, Optional, Any
 
 
 class DataSource:
@@ -221,7 +221,7 @@ class DataSource:
         for i in sorted(orders_to_remove, reverse=True):
             self.pending_orders.pop(i)
         
-    def buy(self, volume: int = 1, reason: str = "", log_callback=None, order_type='bar_close'):
+    def buy(self, rate: float = 0.0, volume: int = 0, reason: str = "", log_callback=None, order_type='bar_close'):
         """
         开多仓
         
@@ -240,11 +240,26 @@ class DataSource:
         Returns:
             bool: 是否成功下单
         """
+
         # 使用MultiDataSource的资金管理
         if self.multi_datasource is None:
-            raise ValueError("DataSource必须属于MultiDataSource才能进行交易")
+            raise ValueError("System error, DataSource must belong to MultiDataSource to trade")
         
-        return self.multi_datasource.buy_with_datasource(self, volume, reason, log_callback, order_type)
+        # 获取debug模式设置
+        debug_mode = getattr(log_callback, 'debug_mode', True) if log_callback else True
+
+        # 计算资金模式
+        if rate:
+
+        if order_type == "bar_close":
+            # 立即执行
+            price = self.get_current_price()
+            if price is None:
+                return False
+            self.target_pos = self.current_pos + volume
+            if reason:
+                self.set_signal_reason(reason)
+            self._update_pos(log_callback)
         
     def sell(self, volume: Optional[int] = None, reason: str = "", log_callback=None, order_type='bar_close'):
         """
@@ -533,6 +548,9 @@ class MultiDataSource:
         # 资金管理相关属性
         self.total_capital = 0.0          # 总资金
         self.available_capital = 0.0      # 可用资金
+        self.commission = 0.0             # 手续费率
+        self.margin_rate = 0.0            # 保证金率
+        self.contract_multiplier = 0.0     # 合约乘数
         self.frozen_capital = 0.0         # 冻结资金总额
         self.unrealized_pnl = 0.0         # 未实现盈亏总额
         self.realized_pnl = 0.0           # 已实现盈亏总额
@@ -544,13 +562,13 @@ class MultiDataSource:
         """设置日志回调函数"""
         self.log_callback = callback
         
-    def add_data_source(self, symbol: str, kline_period: str, adjust_type: str = '1', data: Optional[pl.DataFrame] = None) -> int:
+    def add_data_source(self, symbol: str, kline_interval: str, adjust_type: str = '1', data: Optional[pl.DataFrame] = None) -> int:
         """
         添加数据源
         
         Args:
             symbol: 品种代码，如'rb888'
-            kline_period: K线周期，如'1h', 'D'
+            kline_interval: K线周期，如'1h', 'D'
             adjust_type: 复权类型，'0'表示不复权，'1'表示后复权
             data: 数据，如果为None则创建空数据源
             
@@ -558,7 +576,7 @@ class MultiDataSource:
             数据源索引
         """
         # 将自身MultiDataSource实例传递给DataSource
-        data_source = DataSource(symbol, kline_period, adjust_type, self)
+        data_source = DataSource(symbol, kline_interval, adjust_type, self)
         if data is not None:
             data_source.set_data(data)
         self.data_sources.append(data_source)
@@ -572,435 +590,30 @@ class MultiDataSource:
             'position_value': 0.0,        # 持仓价值
             'margin_used': 0.0,           # 保证金使用
             'symbol': symbol,              # 品种代码
-            'kline_period': kline_period  # K线周期
+            'kline_period': kline_interval  # K线周期
         }
         
         return datasource_index
     
-    def initialize_capital(self, capital: float = 100000.0):
+    def initialize_trade_config(self, trade_config: Dict):
         """
         初始化共用资金池
         
         Args:
             capital: 初始资金，默认为100000
         """
-        self.total_capital = capital
-        self.available_capital = capital
+        self.total_capital = trade_config.get("initial_captial")
+        self.available_capital = trade_config.get("initial_captial")
+        self.commission = trade_config.get("commission")
+        self.margin_rate = trade_config.get("margin_rate")
+        self.contract_multiplier = trade_config.get("contract_multiplier")
         self.frozen_capital = 0.0
         self.unrealized_pnl = 0.0
         self.realized_pnl = 0.0
         
         if self.log_callback:
-            self.log_callback(f"共用资金池初始化完成: 总资金={capital:.2f}")
+            self.log_callback(f"Capital initialized to {capital:.2f}")
     
-    def get_capital_info(self) -> dict:
-        """
-        获取总资金信息
-        
-        Returns:
-            dict: 包含总资金信息的字典
-        """
-        return {
-            'total_capital': self.total_capital,
-            'available_capital': self.available_capital,
-            'frozen_capital': self.frozen_capital,
-            'unrealized_pnl': self.unrealized_pnl,
-            'realized_pnl': self.realized_pnl,
-            'total_equity': self.total_capital + self.unrealized_pnl + self.realized_pnl
-        }
-    
-    def get_datasource_capital_info(self, index: int) -> Optional[dict]:
-        """
-        获取指定数据源的资金信息
-        
-        Args:
-            index: 数据源索引
-            
-        Returns:
-            dict: 包含该数据源资金信息的字典，如果索引无效则返回None
-        """
-        if index not in self.datasource_info:
-            return None
-            
-        info = self.datasource_info[index].copy()
-        ds = self.data_sources[index]
-        
-        # 计算当前持仓价值
-        if ds.current_pos != 0 and ds.get_current_price() is not None:
-            current_price = ds.get_current_price()
-            info['position_value'] = abs(ds.current_pos) * current_price
-            info['current_price'] = current_price
-            info['current_position'] = ds.current_pos
-        else:
-            info['position_value'] = 0.0
-            info['current_price'] = ds.get_current_price()
-            info['current_position'] = ds.current_pos
-            
-        return info
-    
-    def get_all_datasources_capital_info(self) -> dict:
-        """
-        获取所有数据源的资金信息
-        
-        Returns:
-            dict: 包含所有数据源资金信息的字典
-        """
-        result = {}
-        for index in self.datasource_info:
-            result[index] = self.get_datasource_capital_info(index)
-        return result
-    
-    def _calculate_total_unrealized_pnl(self) -> float:
-        """
-        计算所有数据源的总未实现盈亏
-        
-        Returns:
-            float: 总未实现盈亏
-        """
-        total_unrealized_pnl = 0.0
-        
-        for index, ds in enumerate(self.data_sources):
-            if ds.current_pos != 0 and ds.get_current_price() is not None:
-                current_price = ds.get_current_price()
-                position_value = abs(ds.current_pos) * current_price
-                
-                # 计算该数据源的交易成本（简化处理，实际可能需要更复杂的计算）
-                # 这里假设开仓价格存储在datasource_info中
-                if 'entry_price' in self.datasource_info[index]:
-                    entry_price = self.datasource_info[index]['entry_price']
-                    if ds.current_pos > 0:  # 多头持仓
-                        unrealized_pnl = (current_price - entry_price) * abs(ds.current_pos)
-                    else:  # 空头持仓
-                        unrealized_pnl = (entry_price - current_price) * abs(ds.current_pos)
-                else:
-                    unrealized_pnl = 0.0
-                
-                total_unrealized_pnl += unrealized_pnl
-                self.datasource_info[index]['unrealized_pnl'] = unrealized_pnl
-                self.datasource_info[index]['position_value'] = position_value
-        
-        return total_unrealized_pnl
-    
-    def _update_capital_after_trade(self, datasource_index: int, action: str, price: float, volume: int):
-        """
-        交易后更新资金信息
-        
-        Args:
-            datasource_index: 数据源索引
-            action: 交易动作
-            price: 成交价格
-            volume: 成交数量
-        """
-        ds = self.data_sources[datasource_index]
-        info = self.datasource_info[datasource_index]
-        
-        if action in ["开多", "开空"]:
-            # 开仓：冻结资金
-            required_capital = price * volume
-            if self.available_capital >= required_capital:
-                self.available_capital -= required_capital
-                self.frozen_capital += required_capital
-                info['frozen_capital'] += required_capital
-                info['entry_price'] = price
-                
-                if self.log_callback:
-                    self.log_callback(f"{info['symbol']} 开仓冻结资金: {required_capital:.2f}, 可用资金: {self.available_capital:.2f}")
-        
-        elif action in ["平多", "平空"]:
-            # 平仓：释放资金并计算盈亏
-            released_capital = price * volume
-            self.frozen_capital -= released_capital
-            self.available_capital += released_capital
-            info['frozen_capital'] -= released_capital
-            
-            # 计算已实现盈亏
-            if 'entry_price' in info:
-                if action == "平多":
-                    realized_pnl = (price - info['entry_price']) * volume
-                else:  # 平空
-                    realized_pnl = (info['entry_price'] - price) * volume
-                
-                self.realized_pnl += realized_pnl
-                info['realized_pnl'] += realized_pnl
-                self.total_capital += realized_pnl
-                self.available_capital += realized_pnl
-                
-                if self.log_callback:
-                    self.log_callback(f"{info['symbol']} 平仓释放资金: {released_capital:.2f}, 已实现盈亏: {realized_pnl:.2f}")
-            
-            # 清除开仓价格
-            if ds.current_pos == 0:
-                info.pop('entry_price', None)
-        
-        elif action in ["平多开空", "平空开多"]:
-            # 反手：先平仓再开仓
-            old_pos = abs(ds.current_pos)
-            released_capital = price * old_pos
-            required_capital = price * old_pos
-            
-            # 平仓部分
-            self.frozen_capital -= released_capital
-            info['frozen_capital'] -= released_capital
-            
-            # 计算已实现盈亏
-            if 'entry_price' in info:
-                if action == "平多开空":
-                    realized_pnl = (price - info['entry_price']) * old_pos
-                else:  # 平空开多
-                    realized_pnl = (info['entry_price'] - price) * old_pos
-                
-                self.realized_pnl += realized_pnl
-                info['realized_pnl'] += realized_pnl
-                self.total_capital += realized_pnl
-                self.available_capital += realized_pnl
-            
-            # 开仓部分
-            self.frozen_capital += required_capital
-            info['frozen_capital'] += required_capital
-            info['entry_price'] = price
-            
-            if self.log_callback:
-                self.log_callback(f"{info['symbol']} 反手交易，已实现盈亏: {realized_pnl:.2f}")
-        
-        # 更新未实现盈亏
-        self.unrealized_pnl = self._calculate_total_unrealized_pnl()
-    
-    def buy_with_datasource(self, datasource: DataSource, volume: int = 1, reason: str = "", log_callback=None, order_type='bar_close'):
-        """
-        开多仓（集成资金管理）
-        
-        Args:
-            datasource: DataSource实例
-            volume: 交易数量
-            reason: 交易原因
-            log_callback: 日志回调函数
-            order_type: 订单类型
-            
-        Returns:
-            bool: 是否成功下单
-        """
-        # 找到datasource的索引
-        datasource_index = self.data_sources.index(datasource)
-        info = self.datasource_info[datasource_index]
-        
-        # 检查可用资金
-        current_price = datasource.get_current_price()
-        if current_price is None:
-            return False
-            
-        required_capital = current_price * volume
-        if self.available_capital < required_capital:
-            if self.log_callback:
-                self.log_callback(f"{info['symbol']} 开多失败: 可用资金不足，需要{required_capital:.2f}，可用{self.available_capital:.2f}")
-            return False
-        
-        # 执行交易（调用原始的交易逻辑，不进行资金管理）
-        success = self._execute_trade_without_capital(datasource, "buy", volume, reason, log_callback, order_type)
-        if success:
-            self._update_capital_after_trade(datasource_index, "开多", current_price, volume)
-        
-        return success
-    
-    def sell_with_datasource(self, datasource: DataSource, volume: Optional[int] = None, reason: str = "", log_callback=None, order_type='bar_close'):
-        """
-        平多仓（集成资金管理）
-        
-        Args:
-            datasource: DataSource实例
-            volume: 交易数量，None表示平掉所有多仓
-            reason: 交易原因
-            log_callback: 日志回调函数
-            order_type: 订单类型
-            
-        Returns:
-            bool: 是否成功下单
-        """
-        # 找到datasource的索引
-        datasource_index = self.data_sources.index(datasource)
-        
-        # 执行交易（调用原始的交易逻辑，不进行资金管理）
-        success = self._execute_trade_without_capital(datasource, "sell", volume, reason, log_callback, order_type)
-        if success:
-            # 获取实际成交数量和价格
-            if volume is None:
-                actual_volume = max(0, datasource.current_pos)
-            else:
-                actual_volume = min(volume, max(0, datasource.current_pos))
-            
-            if actual_volume > 0:
-                current_price = datasource.get_current_price()
-                if current_price is not None:
-                    self._update_capital_after_trade(datasource_index, "平多", current_price, actual_volume)
-        
-        return success
-    
-    def sellshort_with_datasource(self, datasource: DataSource, volume: int = 1, reason: str = "", log_callback=None, order_type='bar_close'):
-        """
-        开空仓（集成资金管理）
-        
-        Args:
-            datasource: DataSource实例
-            volume: 交易数量
-            reason: 交易原因
-            log_callback: 日志回调函数
-            order_type: 订单类型
-            
-        Returns:
-            bool: 是否成功下单
-        """
-        # 找到datasource的索引
-        datasource_index = self.data_sources.index(datasource)
-        info = self.datasource_info[datasource_index]
-        
-        # 检查可用资金
-        current_price = datasource.get_current_price()
-        if current_price is None:
-            return False
-            
-        required_capital = current_price * volume
-        if self.available_capital < required_capital:
-            if self.log_callback:
-                self.log_callback(f"{info['symbol']} 开空失败: 可用资金不足，需要{required_capital:.2f}，可用{self.available_capital:.2f}")
-            return False
-        
-        # 执行交易（调用原始的交易逻辑，不进行资金管理）
-        success = self._execute_trade_without_capital(datasource, "sellshort", volume, reason, log_callback, order_type)
-        if success:
-            self._update_capital_after_trade(datasource_index, "开空", current_price, volume)
-        
-        return success
-    
-    def buycover_with_datasource(self, datasource: DataSource, volume: Optional[int] = None, reason: str = "", log_callback=None, order_type='bar_close'):
-        """
-        平空仓（集成资金管理）
-        
-        Args:
-            datasource: DataSource实例
-            volume: 交易数量，None表示平掉所有空仓
-            reason: 交易原因
-            log_callback: 日志回调函数
-            order_type: 订单类型
-            
-        Returns:
-            bool: 是否成功下单
-        """
-        # 找到datasource的索引
-        datasource_index = self.data_sources.index(datasource)
-        
-        # 执行交易（调用原始的交易逻辑，不进行资金管理）
-        success = self._execute_trade_without_capital(datasource, "buycover", volume, reason, log_callback, order_type)
-        if success:
-            # 获取实际成交数量和价格
-            if volume is None:
-                actual_volume = max(0, -datasource.current_pos)
-            else:
-                actual_volume = min(volume, max(0, -datasource.current_pos))
-            
-            if actual_volume > 0:
-                current_price = datasource.get_current_price()
-                if current_price is not None:
-                    self._update_capital_after_trade(datasource_index, "平空", current_price, actual_volume)
-        
-        return success
-    
-    def _execute_trade_without_capital(self, datasource: DataSource, action: str, volume: Optional[int] = None, reason: str = "", log_callback=None, order_type='bar_close'):
-        """
-        执行交易但不进行资金管理（内部方法）
-        
-        Args:
-            datasource: DataSource实例
-            action: 交易动作
-            volume: 交易数量
-            reason: 交易原因
-            log_callback: 日志回调函数
-            order_type: 订单类型
-            
-        Returns:
-            bool: 是否成功下单
-        """
-        # 直接执行交易逻辑，不通过DataSource的交易方法
-        try:
-            if action == "buy":
-                # 直接设置目标持仓
-                old_pos = datasource.current_pos
-                datasource.target_pos = old_pos + (volume or 1)
-                datasource._update_pos(log_callback)
-                
-                # 记录交易
-                price = datasource.get_price_by_type(order_type)
-                if price is None:
-                    price = datasource.get_current_price()
-                if price is not None:
-                    datasource.add_trade("开多", price, volume or 1, reason)
-                success = True
-                
-            elif action == "sell":
-                # 计算实际平仓数量
-                if volume is None:
-                    actual_volume = max(0, datasource.current_pos)
-                else:
-                    actual_volume = min(volume, max(0, datasource.current_pos))
-                
-                if actual_volume > 0:
-                    old_pos = datasource.current_pos
-                    datasource.target_pos = old_pos - actual_volume
-                    datasource._update_pos(log_callback)
-                    
-                    # 记录交易
-                    price = datasource.get_price_by_type(order_type)
-                    if price is None:
-                        price = datasource.get_current_price()
-                    if price is not None:
-                        datasource.add_trade("平多", price, actual_volume, reason)
-                    success = True
-                else:
-                    success = False
-                    
-            elif action == "sellshort":
-                # 直接设置目标持仓
-                old_pos = datasource.current_pos
-                datasource.target_pos = old_pos - (volume or 1)
-                datasource._update_pos(log_callback)
-                
-                # 记录交易
-                price = datasource.get_price_by_type(order_type)
-                if price is None:
-                    price = datasource.get_current_price()
-                if price is not None:
-                    datasource.add_trade("开空", price, volume or 1, reason)
-                success = True
-                
-            elif action == "buycover":
-                # 计算实际平仓数量
-                if volume is None:
-                    actual_volume = max(0, -datasource.current_pos)
-                else:
-                    actual_volume = min(volume, max(0, -datasource.current_pos))
-                
-                if actual_volume > 0:
-                    old_pos = datasource.current_pos
-                    datasource.target_pos = old_pos + actual_volume
-                    datasource._update_pos(log_callback)
-                    
-                    # 记录交易
-                    price = datasource.get_price_by_type(order_type)
-                    if price is None:
-                        price = datasource.get_current_price()
-                    if price is not None:
-                        datasource.add_trade("平空", price, actual_volume, reason)
-                    success = True
-                else:
-                    success = False
-            else:
-                success = False
-                
-        except Exception as e:
-            if log_callback:
-                log_callback(f"执行交易失败: {e}")
-            success = False
-        
-        return success
-        
     def get_data_source(self, index: int) -> Optional[DataSource]:
         """获取指定索引的数据源"""
         if 0 <= index < len(self.data_sources):
@@ -1124,3 +737,11 @@ class MultiDataSource:
                     
         if self.log_callback:
             self.log_callback(f"Data alignment completed, aligned {aligned_count} data sources") 
+
+
+    # 资金方法
+    def get_available_capital(self) -> Optional[float]:
+        """获取可用资金"""
+        return self.available_capital
+    
+    

@@ -5,31 +5,39 @@ from loguru import logger
 class BacktestLogger:
     """回测日志管理器类，负责处理日志记录、日志文件创建等功能"""
     
+    # 类变量，用于跟踪是否已经初始化过
+    _initialized = False
+    
     def __init__(self, debug_mode=False):
         """初始化日志管理器"""
         self.debug_mode = debug_mode
         self.log_file = None
         self.performance_file = None
-        self.logger_id = None
+        self.console_logger_id = None
+        self.file_logger_id = None
         
-    def set_debug_mode(self, debug_mode):
-        """设置调试模式
+        # 只在第一次初始化时移除默认处理器
+        if not BacktestLogger._initialized:
+            logger.remove()
+            BacktestLogger._initialized = True
         
-        Args:
-            debug_mode: 是否开启调试模式
-        """
-        self.debug_mode = debug_mode
+        self.logger = logger
         self._update_logger_config()
+        
     
     def _update_logger_config(self):
         """更新日志配置"""
         # 移除之前的处理器
-        if self.logger_id is not None:
-            logger.remove(self.logger_id)
+        if self.console_logger_id is not None:
+            self.logger.remove(self.console_logger_id)
+            self.console_logger_id = None
+        if self.file_logger_id is not None:
+            self.logger.remove(self.file_logger_id)
+            self.file_logger_id = None
         
         # 配置控制台输出
-        if self.debug_mode:
-            logger.add(
+        if self.debug_mode and not os.environ.get('NO_CONSOLE_LOG', '').lower() == 'true':
+            self.console_logger_id = self.logger.add(
                 sink=lambda msg: print(msg, end=""),
                 level="INFO",
                 format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
@@ -37,8 +45,8 @@ class BacktestLogger:
             )
         
         # 配置文件输出
-        if self.log_file:
-            self.logger_id = logger.add(
+        if self.log_file and not os.environ.get('NO_VISUALIZATION', '').lower() == 'true':
+            self.file_logger_id = self.logger.add(
                 sink=self.log_file,
                 level="INFO",
                 format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
@@ -50,7 +58,7 @@ class BacktestLogger:
                 diagnose=True
             )
     
-    def prepare_log_file(self, symbols_and_periods):
+    def prepare_log_file(self, symbol_configs):
         """准备日志文件
         
         Args:
@@ -66,7 +74,7 @@ class BacktestLogger:
             
         # 创建日志文件
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        symbols_str = "_".join([item["symbol"] for item in symbols_and_periods])
+        symbols_str = "_".join([item for item in symbol_configs.keys()])
         self.log_file = os.path.join(log_dir, f"backtest_{symbols_str}_{timestamp}.log")
         
         # 创建综合绩效报告文件
@@ -79,9 +87,9 @@ class BacktestLogger:
         self._update_logger_config()
         
         # 写入日志头
-        logger.info(f"多数据源回测日志 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        logger.info(f"回测品种: {symbols_str}")
-        logger.info("=" * 80)
+        self.logger.info(f"多数据源回测日志 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        self.logger.info(f"回测品种: {symbols_str}")
+        self.logger.info("=" * 80)
             
         return self.log_file
     
@@ -91,7 +99,7 @@ class BacktestLogger:
         Args:
             message: 日志消息
         """
-        logger.info(message)
+        self.logger.info(message)
     
     def log_debug(self, message):
         """记录调试消息
@@ -99,7 +107,7 @@ class BacktestLogger:
         Args:
             message: 调试消息
         """
-        logger.debug(message)
+        self.logger.debug(message)
     
     def log_warning(self, message):
         """记录警告消息
@@ -107,7 +115,7 @@ class BacktestLogger:
         Args:
             message: 警告消息
         """
-        logger.warning(message)
+        self.logger.warning(message)
     
     def log_error(self, message):
         """记录错误消息
@@ -115,7 +123,7 @@ class BacktestLogger:
         Args:
             message: 错误消息
         """
-        logger.error(message)
+        self.logger.error(message)
     
     def get_performance_file(self):
         """获取绩效报告文件路径"""
@@ -127,5 +135,7 @@ class BacktestLogger:
     
     def __del__(self):
         """析构函数，清理日志处理器"""
-        if self.logger_id is not None:
-            logger.remove(self.logger_id)
+        if self.console_logger_id is not None:
+            self.logger.remove(self.console_logger_id)
+        if self.file_logger_id is not None:
+            self.logger.remove(self.file_logger_id)
