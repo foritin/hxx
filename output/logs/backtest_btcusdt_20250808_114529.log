@@ -1,7 +1,0 @@
-2025-08-08 11:45:29 | INFO     | extend.core.backtest_logger:prepare_log_file:97 - 多数据源回测日志 - 2025-08-08 11:45:29
-2025-08-08 11:45:29 | INFO     | extend.core.backtest_logger:prepare_log_file:98 - 回测品种: btcusdt
-2025-08-08 11:45:29 | INFO     | extend.core.backtest_logger:prepare_log_file:99 - ================================================================================
-2025-08-08 11:45:29 | INFO     | extend.core.backtest_logger:log_message:109 - Fetching data for backtest...
-2025-08-08 11:45:29 | INFO     | extend.core.backtest_logger:log_message:109 - 
-Fetching data...
-2025-08-08 11:45:29 | INFO     | extend.core.backtest_logger:log_message:109 - No data fetched for backtest.
