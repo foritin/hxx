@@ -1,0 +1,35 @@
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:prepare_log_file:115 - 多数据源回测日志 - 2025-08-28 13:02:03
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:prepare_log_file:116 - 回测品种: solusdt
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:prepare_log_file:117 - ================================================================================
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:log_message:132 - Fetching data for backtest...
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:log_message:132 - 
+Fetching data...
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:log_message:132 - Added data source for solusdt 5m
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:log_message:132 - Running backtest...
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:log_message:132 - Backtest data length: 278784
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:log_message:132 - 处理第 0/278784 条数据
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:log_message:132 - 数据源 #0: 时间=2023-01-01 00:00:00, 价格=10.00, 持仓=0
+2025-08-28 13:02:03 | INFO     | extend.core.backtest_logger:log_message:132 - Bar 1: 策略状态初始化完成
+2025-08-28 13:02:04 | INFO     | extend.core.backtest_logger:log_message:132 - 处理第 100/278784 条数据
+2025-08-28 13:02:04 | INFO     | extend.core.backtest_logger:log_message:132 - 数据源 #0: 时间=2023-01-01 08:20:00, 价格=9.74, 持仓=0
+2025-08-28 13:02:05 | INFO     | extend.core.backtest_logger:log_message:132 - 处理第 200/278784 条数据
+2025-08-28 13:02:05 | INFO     | extend.core.backtest_logger:log_message:132 - 数据源 #0: 时间=2023-01-01 16:40:00, 价格=9.85, 持仓=0
+2025-08-28 13:02:06 | INFO     | extend.core.backtest_logger:log_message:132 - 处理第 300/278784 条数据
+2025-08-28 13:02:06 | INFO     | extend.core.backtest_logger:log_message:132 - 数据源 #0: 时间=2023-01-02 01:00:00, 价格=9.91, 持仓=0
+2025-08-28 13:02:06 | INFO     | extend.core.backtest_logger:log_message:132 - 数据准备中，需要至少 305 根K线
+2025-08-28 13:02:14 | INFO     | extend.core.backtest_logger:log_message:132 - 处理第 400/278784 条数据
+2025-08-28 13:02:14 | INFO     | extend.core.backtest_logger:log_message:132 - 数据源 #0: 时间=2023-01-02 09:20:00, 价格=11.14, 持仓=0
+2025-08-28 13:02:14 | INFO     | extend.core.backtest_logger:log_message:132 - Bar 400: SAR=11.6308, PrevTransition=0, PrevTrendChange=True, TVI=0.198955, 持仓=0
+2025-08-28 13:02:14 | INFO     | extend.core.backtest_logger:log_message:132 - HH_prev=12.07, LL_prev=10.85, High=11.15, Low=11.08
+2025-08-28 13:02:17 | INFO     | extend.core.backtest_logger:log_message:132 - 处理第 500/278784 条数据
+2025-08-28 13:02:17 | INFO     | extend.core.backtest_logger:log_message:132 - 数据源 #0: 时间=2023-01-02 17:40:00, 价格=11.13, 持仓=0
+2025-08-28 13:02:17 | INFO     | extend.core.backtest_logger:log_message:132 - Bar 500: SAR=11.0716, PrevTransition=1, PrevTrendChange=False, TVI=0.388638, 持仓=0
+2025-08-28 13:02:17 | INFO     | extend.core.backtest_logger:log_message:132 - HH_prev=11.23, LL_prev=11.07, High=11.15, Low=11.13
+2025-08-28 13:02:20 | INFO     | extend.core.backtest_logger:log_message:132 - 处理第 600/278784 条数据
+2025-08-28 13:02:20 | INFO     | extend.core.backtest_logger:log_message:132 - 数据源 #0: 时间=2023-01-03 02:00:00, 价格=11.10, 持仓=0
+2025-08-28 13:02:20 | INFO     | extend.core.backtest_logger:log_message:132 - Bar 600: SAR=11.2024, PrevTransition=0, PrevTrendChange=False, TVI=0.205156, 持仓=0
+2025-08-28 13:02:20 | INFO     | extend.core.backtest_logger:log_message:132 - HH_prev=11.32, LL_prev=11.00, High=11.11, Low=11.04
+2025-08-28 13:02:22 | INFO     | extend.core.backtest_logger:log_message:132 - 处理第 700/278784 条数据
+2025-08-28 13:02:22 | INFO     | extend.core.backtest_logger:log_message:132 - 数据源 #0: 时间=2023-01-03 10:20:00, 价格=11.82, 持仓=0
+2025-08-28 13:02:23 | INFO     | extend.core.backtest_logger:log_message:132 - Bar 700: SAR=11.7446, PrevTransition=0, PrevTrendChange=True, TVI=0.210932, 持仓=0
+2025-08-28 13:02:23 | INFO     | extend.core.backtest_logger:log_message:132 - HH_prev=11.85, LL_prev=11.67, High=11.83, Low=11.78

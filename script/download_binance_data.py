@@ -12,32 +12,69 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 import os
 import argparse
+import time
 
 # 配置常量
 CHUNK_SIZE = 8192
+MAX_RETRIES = 3
+RETRY_DELAY = 5
+TIMEOUT = 30
+RESUME_ENABLED = True
 
 
-def download_file(url: str, save_path: Path) -> bool:
+def get_file_size(file_path: Path) -> int:
+    """获取文件大小"""
+    if file_path.exists():
+        return file_path.stat().st_size
+    return 0
+
+
+def download_file(url: str, save_path: Path, max_retries: int = MAX_RETRIES, 
+                 retry_delay: int = RETRY_DELAY, timeout: int = TIMEOUT) -> bool:
     """
-    下载文件
+    下载文件，支持重试机制
     """
-    try:
-        print(f"正在下载: {url}")
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        with open(save_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
-                if chunk:
-                    f.write(chunk)
-        
-        print(f"下载完成: {save_path}")
-        return True
-    except Exception as e:
-        print(f"下载失败: {url}, 错误: {e}")
-        return False
+    for attempt in range(max_retries + 1):
+        try:
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # 检查是否支持断点续传
+            existing_size = get_file_size(save_path)
+            headers = {}
+            
+            if RESUME_ENABLED and existing_size > 0:
+                headers['Range'] = f'bytes={existing_size}-'
+                mode = 'ab'  # 追加模式
+                print(f"正在续传: {url} (从 {existing_size} 字节开始)")
+            else:
+                mode = 'wb'  # 写入模式
+                print(f"正在下载: {url} (尝试 {attempt + 1}/{max_retries + 1})")
+            
+            response = requests.get(url, headers=headers, stream=True, timeout=timeout)
+            response.raise_for_status()
+            
+            with open(save_path, mode) as f:
+                for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
+                    if chunk:
+                        f.write(chunk)
+            
+            print(f"下载完成: {save_path}")
+            return True
+            
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries:
+                print(f"下载失败: {url}, 错误: {e}")
+                print(f"{retry_delay} 秒后重试...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # 指数退避
+            else:
+                print(f"下载失败，已达最大重试次数: {url}, 错误: {e}")
+                return False
+        except Exception as e:
+            print(f"下载失败: {url}, 错误: {e}")
+            return False
+    
+    return False
 
 
 def unzip_file(zip_path: Path, extract_to: Path) -> bool:
@@ -93,10 +130,68 @@ def get_last_timestamp(output_file: Path) -> Optional[int]:
         
         # 假设第一列是timestamp
         last_timestamp = df.iloc[-1, 0]
-        return int(last_timestamp)
+        if pd.notna(last_timestamp):
+            return int(float(last_timestamp))
+        return None
     except Exception as e:
         print(f"读取现有文件失败: {e}")
         return None
+
+
+def get_existing_date_ranges(output_file: Path) -> Tuple[Optional[str], Optional[str]]:
+    """
+    获取现有数据覆盖的日期范围
+    """
+    if not output_file.exists():
+        return None, None
+    
+    try:
+        df = pd.read_csv(output_file)
+        if df.empty:
+            return None, None
+        
+        # 假设第一列是timestamp
+        timestamps = df.iloc[:, 0].astype(int)
+        
+        # 转换为日期字符串
+        dates = []
+        for ts in timestamps:
+            dt = datetime.fromtimestamp(ts / 1000)
+            dates.append(dt.strftime('%Y-%m-%d'))
+        
+        # 获取最早和最晚的日期
+        unique_dates = sorted(list(set(dates)))
+        return unique_dates[0], unique_dates[-1]
+        
+    except Exception as e:
+        print(f"读取现有文件失败: {e}")
+        return None, None
+
+
+def find_missing_dates(target_dates: List[str], existing_start: Optional[str], 
+                      existing_end: Optional[str]) -> List[str]:
+    """
+    找出目标日期范围内缺失的日期
+    """
+    if existing_start is None or existing_end is None:
+        return target_dates
+    
+    # 将现有日期范围内的所有日期转换为set
+    existing_dates = set()
+    current = datetime.strptime(existing_start, '%Y-%m-%d')
+    end = datetime.strptime(existing_end, '%Y-%m-%d')
+    
+    while current <= end:
+        existing_dates.add(current.strftime('%Y-%m-%d'))
+        current += timedelta(days=1)
+    
+    # 找出目标日期中不在现有日期集合中的日期
+    missing_dates = []
+    for date in target_dates:
+        if date not in existing_dates:
+            missing_dates.append(date)
+    
+    return missing_dates
 
 
 def calculate_date_range(start_date: str, end_date: str, symbol: str, interval: str, 
@@ -111,23 +206,31 @@ def calculate_date_range(start_date: str, end_date: str, symbol: str, interval: 
     output_dir = Path(f"resource/data/swap/{symbol}/{interval}/")
     output_file = output_dir / f"{symbol}.csv"
     
-    last_timestamp = get_last_timestamp(output_file)
-    if last_timestamp is None:
+    if not output_file.exists():
         return start_date, end_date
     
-    # 将时间戳转换为日期
-    last_datetime = datetime.fromtimestamp(last_timestamp / 1000)  # 毫秒转秒
-    # 从下一天开始下载
-    new_start_date = (last_datetime + timedelta(days=1)).strftime("%Y-%m-%d")
+    # 获取现有数据的日期范围
+    existing_start, existing_end = get_existing_date_ranges(output_file)
     
-    # 如果新的开始日期已经超过结束日期，说明没有新数据需要下载
-    if new_start_date > end_date:
+    if existing_start is None or existing_end is None:
+        return start_date, end_date
+    
+    print(f"检测到现有数据，日期范围: {existing_start} 到 {existing_end}")
+    
+    # 生成目标日期范围
+    target_dates = generate_date_range(start_date, end_date)
+    
+    # 找出缺失的日期
+    missing_dates = find_missing_dates(target_dates, existing_start, existing_end)
+    
+    if not missing_dates:
+        print("没有缺失的数据需要下载")
         return None, None
     
-    print(f"检测到现有数据，最后时间: {last_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"将从 {new_start_date} 开始下载增量数据")
+    print(f"发现 {len(missing_dates)} 天的缺失数据需要下载")
     
-    return new_start_date, end_date
+    # 返回最早和最晚的缺失日期
+    return min(missing_dates), max(missing_dates)
 
 
 def merge_to_single_file(csv_files: List[Path], symbol: str, interval: str) -> None:
@@ -193,7 +296,9 @@ def merge_to_single_file(csv_files: List[Path], symbol: str, interval: str) -> N
 
 
 def download_binance_data(symbol: str, interval: str, start_date: str, end_date: str, 
-                         clean_zip: bool = True, incremental: bool = True) -> None:
+                         clean_zip: bool = True, incremental: bool = True, 
+                         max_retries: int = MAX_RETRIES, retry_delay: int = RETRY_DELAY, 
+                         timeout: int = TIMEOUT) -> None:
     """
     下载币安期货数据
     """
@@ -206,7 +311,26 @@ def download_binance_data(symbol: str, interval: str, start_date: str, end_date:
         print("没有新数据需要下载")
         return
     
-    dates = generate_date_range(actual_start, actual_end)
+    # 生成完整的日期范围
+    target_dates = generate_date_range(start_date, end_date)
+    
+    # 如果是增量下载，找出缺失的日期
+    if incremental:
+        output_dir = Path(f"resource/data/swap/{symbol}/{interval}/")
+        output_file = output_dir / f"{symbol}.csv"
+        
+        if output_file.exists():
+            existing_start, existing_end = get_existing_date_ranges(output_file)
+            dates = find_missing_dates(target_dates, existing_start, existing_end)
+        else:
+            dates = target_dates
+    else:
+        dates = target_dates
+    
+    # 过滤掉在计算范围之外的日期
+    if actual_start and actual_end:
+        dates = [d for d in dates if actual_start <= d <= actual_end]
+    
     if not dates:
         return
     
@@ -229,7 +353,7 @@ def download_binance_data(symbol: str, interval: str, start_date: str, end_date:
         zip_path = output_dir / zip_filename
         
         # 下载文件
-        if download_file(url, zip_path):
+        if download_file(url, zip_path, max_retries, retry_delay, timeout):
             success_count += 1
             
             # 解压文件

@@ -18,4 +18,6 @@ dependencies = [
     "python-box>=7.3.2",
     "pydantic>=2.11.7",
     "loguru>=0.7.0",
+    "ssquant>=0.2.3",
+    "bidict>=0.23.1",
 ]

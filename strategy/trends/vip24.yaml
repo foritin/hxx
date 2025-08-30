@@ -1,0 +1,29 @@
+base_config:
+  use_cache: true
+  debug: true
+  save_data: true
+
+trade_config:
+  total_captial: 1000000
+  commission: 0.001
+  slippage: 0.0
+  leverage: 1
+  total_margin_rate: 0.3
+  trade_type: "cross"
+
+symbol_configs:
+  - symbol: "solusdt"
+    start_date: "2023-01-01"
+    end_date: "2025-08-01"
+    symbol_type: "swap"
+    source_type: "csv"
+    isolated_margin_rate: 0.3
+    periods: ["5m"]
+
+strategy_params:
+  "lengs": 75  # ATR range
+  "AfStep": 0.02 # SAR 加速银子
+  "X": 25
+  "TrailingStopRate": 0.2 # 追踪止损比例
+  "AfLimit": 0.2 # SAR加速因子上限
+  "OrderPercent": 0.2 # 下单百分比
