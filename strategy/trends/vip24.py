@@ -367,8 +367,8 @@ def vip24_strategy(api: StrategyAPI):
     if prev_transition == 1 and prev_trend_change and high[current_idx] >= HH_prev and current_pos == 0:
 
         entry_price = max(open_p[current_idx], HH_prev)
-        api.buy(datasource_mark="solusdt_5m", order_percent=order_percent, order_type="next_bar_open")
-        api.log(f"开多: {Lots}手 @ {entry_price:.2f} (前Bar SAR转多+TVI变化+突破前高)")
+        api.buy(datasource_mark="solusdt_5m", order_percent=order_percent, order_type="bar_close")
+        api.log(f"开多: @ {entry_price:.2f} (前Bar SAR转多+TVI变化+突破前高)")
 
         # 初始化跟踪止损
         state.HighestLowAfterEntry = open_p[current_idx]
@@ -379,8 +379,8 @@ def vip24_strategy(api: StrategyAPI):
     elif prev_transition == -1 and prev_trend_change and low[current_idx] <= LL_prev and current_pos == 0:
 
         entry_price = min(open_p[current_idx], LL_prev)
-        api.sellshort(volume=Lots, order_type="next_bar_open")
-        api.log(f"开空: {Lots}手 @ {entry_price:.2f} (前Bar SAR转空+TVI变化+突破前低)")
+        api.sell(datasource_mark="solusdt_5m", order_percent=order_percent, order_type="bar_close")
+        api.log(f"开空: {entry_price:.2f} (前Bar SAR转空+TVI变化+突破前低)")
 
         # 初始化跟踪止损
         state.LowestHighAfterEntry = open_p[current_idx]
@@ -409,7 +409,7 @@ def vip24_strategy(api: StrategyAPI):
         if hasattr(state, "Trailing_Stop_L_prev") and current_idx > state.entBar:
             if low[current_idx] <= state.Trailing_Stop_L_prev:
                 exit_price = min(open_p[current_idx], state.Trailing_Stop_L_prev)
-                api.sell(volume=Lots, order_type="next_bar_open")
+                api.close_long(datasource_mark="solusdt_5m", order_type="bar_close")
                 api.log(f"多头止损: {Lots}手 @ {exit_price:.2f} (止损线: {state.Trailing_Stop_L_prev:.2f})")
 
                 # 重置状态
@@ -435,7 +435,7 @@ def vip24_strategy(api: StrategyAPI):
         if hasattr(state, "Trailing_Stop_S_prev") and current_idx > state.entBar:
             if high[current_idx] >= state.Trailing_Stop_S_prev:
                 exit_price = max(open_p[current_idx], state.Trailing_Stop_S_prev)
-                api.buycover(volume=Lots, order_type="next_bar_open")
+                api.close_short(datasource_mark="solusdt_5m", order_type="bar_close")
                 api.log(f"空头止损: {Lots}手 @ {exit_price:.2f} (止损线: {state.Trailing_Stop_S_prev:.2f})")
 
                 # 重置状态
@@ -486,6 +486,8 @@ if __name__ == "__main__":
     backtester.initialize()
 
     backtester.run_backtest(strategy_func=vip24_strategy)
+
+    print()
 
     # 运行回测
     # results = backtester.run_backtest(strategy_func=vip24_strategy, strategy_params=strategy_params)

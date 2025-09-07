@@ -5,7 +5,7 @@ base_config:
 
 trade_config:
   total_captial: 1000000
-  commission: 0.001
+  commission: 0.00025
   slippage: 0.0
   leverage: 1
   total_margin_rate: 0.3
@@ -13,8 +13,8 @@ trade_config:
 
 symbol_configs:
   - symbol: "solusdt"
-    start_date: "2023-01-01"
-    end_date: "2025-08-01"
+    start_date: "2023-03-01"
+    end_date: "2023-03-31"
     symbol_type: "swap"
     source_type: "csv"
     isolated_margin_rate: 0.3
