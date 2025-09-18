@@ -11,3 +11,5 @@ __pycache__
 .vntrader
 resource/data/swap
 .claude
+CODEBUDDY.md
+*.log

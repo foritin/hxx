@@ -1,0 +1,55 @@
+base_config:
+  use_cache: true
+  debug: true
+  save_data: true
+
+trade_config:
+  total_captial: 1000000
+  commission: 0.00025
+  slippage: 0.0
+  leverage: 1
+  total_margin_rate: 0.3
+  trade_type: "cross"
+
+symbol_configs:
+  - symbol: "solusdt"
+    start_date: "2023-09-01"
+    end_date: "2025-09-01"
+    symbol_type: "swap"
+    source_type: "csv"
+    isolated_margin_rate: 0.3
+    periods: ["30m"]
+    
+
+strategy_params:
+  "M": 60                      # 周期参数
+  "S": 10                      # 加权系数
+  "Lengs": 30                 # 突破周期
+  "Fund": 100000               # 基础资金
+  "TrailingStopRate": 60       # 跟踪止损比例
+  "FastLength": 24             # MACD快线周期
+  "SlowLength": 52             # MACD慢线周期
+  "MACDLength": 24              # MACD信号线周期
+  "OrderPercent": 0.3          # 每次交易使用的资金比例
+
+optimization_params:
+  "M": [20, 40, 60, 80]
+  "S": [10, 20, 40, 60, 80]
+  "TrailingStopRate": [30, 40, 50, 60]
+  "OrderPercent": [0.3]
+  "Lengs": [8, 15, 30, 45]
+  "Fund": [100000]
+  "FastLength": [5, 9, 18, 24]
+  "SlowLength": [26, 35, 45, 52]
+  "MACDLength": [9, 18, 30, 52]
+
+# optimization_params:
+#   "M": [20]
+#   "S": [10]
+#   "TrailingStopRate": [30]
+#   "OrderPercent": [0.2]
+#   "Lengs": [8]
+#   "Fund": [100000]
+#   "FastLength": [9]
+#   "SlowLength": [26]
+#   "MACDLength": [9]

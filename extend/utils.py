@@ -12,18 +12,23 @@ class BaseTools:
 
 class PathTools:
 
-    @staticmethod
-    def combine_path(base, *args) -> Path:
+    @classmethod
+    def combine_path(cls, base, *args) -> Path:
         return Path(base).joinpath(*args)
 
-    @staticmethod
-    def get_root_path():
+    @classmethod
+    def get_root_path(cls):
         return Path(__file__).parent.parent
 
-    @staticmethod
-    def get_data_path():
+    @classmethod
+    def get_data_path(cls):
         return PathTools.get_root_path().joinpath("resource", "data")
 
-    @staticmethod
-    def get_strategy_path():
+    @classmethod
+    def get_strategy_path(cls):
         return PathTools.get_root_path().joinpath("strategy")
+    
+    @classmethod
+    def get_log_path(cls):
+        return PathTools.get_root_path().joinpath("output", "logs")
+        

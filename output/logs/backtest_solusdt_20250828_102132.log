@@ -1,9 +1,0 @@
-2025-08-28 10:21:32 | INFO     | extend.core.backtest_logger:prepare_log_file:115 - 多数据源回测日志 - 2025-08-28 10:21:32
-2025-08-28 10:21:32 | INFO     | extend.core.backtest_logger:prepare_log_file:116 - 回测品种: solusdt
-2025-08-28 10:21:32 | INFO     | extend.core.backtest_logger:prepare_log_file:117 - ================================================================================
-2025-08-28 10:21:32 | INFO     | extend.core.backtest_logger:log_message:132 - Fetching data for backtest...
-2025-08-28 10:21:32 | INFO     | extend.core.backtest_logger:log_message:132 - 
-Fetching data...
-2025-08-28 10:21:32 | INFO     | extend.core.backtest_logger:log_message:132 - Added data source for solusdt 5m
-2025-08-28 10:21:32 | INFO     | extend.core.backtest_logger:log_message:132 - Running backtest...
-2025-08-28 10:21:32 | INFO     | extend.core.backtest_logger:log_message:132 - Backtest data length: 278784

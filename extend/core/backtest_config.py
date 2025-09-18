@@ -28,7 +28,16 @@ class Period(str, Enum):
     ONE_DAY = "1d"
 
 
-class BaseConfig(BaseModel):
+class EnhanceBaseModel(BaseModel):
+
+    def from_dict(cls, params_dict: dict):
+        return cls(**params_dict)
+    
+    def to_dict(cls):
+        return cls.model_dump()
+
+
+class BaseConfig(EnhanceBaseModel):
     use_cache: bool = False
     debug: bool = True
     save_data: bool = True
@@ -36,7 +45,7 @@ class BaseConfig(BaseModel):
     fill_method: str = "ffill"
 
 
-class TradeConfig(BaseModel):
+class TradeConfig(EnhanceBaseModel):
     total_capital: float = Field(100000, description="Total capital for backtest")
     commission: float = 0.001
     slippage: float = Field(0.000, description="Slippage rate")
@@ -45,7 +54,7 @@ class TradeConfig(BaseModel):
     trade_type: TradeType = TradeType.CROSS
 
 
-class SingleSymbolConfig(BaseModel):
+class SingleSymbolConfig(EnhanceBaseModel):
     symbol: str = Field(..., description="Symbol name like btcusdt with lowcase")
     start_date: str = Field(..., description="Start date for backtest, like 2020-01-01", pattern=r"^\d{4}-\d{2}-\d{2}$")
     end_date: str = Field(..., description="End date for backtest, like 2020-12-31", pattern=r"^\d{4}-\d{2}-\d{2}$")
@@ -65,16 +74,20 @@ class SingleSymbolConfig(BaseModel):
         return v
 
 
-class StrategyParams(BaseModel):
+class StrategyParams(EnhanceBaseModel):
     model_config = {"extra": "allow"}
     
     def __init__(self, **data):
         super().__init__(**data)
     
-    @classmethod
-    def from_dict(cls, params_dict: dict):
-        """Create StrategyParams from dictionary dynamically"""
-        return cls(**params_dict)
+
+
+class OptimizationParams(EnhanceBaseModel):
+    model_config = {"extra": "allow"}
+    
+    def __init__(self, **data):
+        super().__init__(**data)
+    
 
 
 class StrategyConfig(BaseModel):
@@ -82,3 +95,4 @@ class StrategyConfig(BaseModel):
     trade_config: TradeConfig
     symbol_configs: List[SingleSymbolConfig]
     strategy_params: StrategyParams
+    optimization_params: OptimizationParams

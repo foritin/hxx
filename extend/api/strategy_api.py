@@ -21,6 +21,14 @@ class StrategyAPI:
         self._data: MultiDataSource = context["data"]
         self._log = context["log"]
         self._params = context.get("params", {})
+        self._aim_datasource_mark = self._data.double_dict[0] if len(self._data) == 1 else None
+
+
+    def get_aim_datasource_mark(self) -> Optional[str]:
+        """
+        获取目标数据源标记
+        """
+        return self._aim_datasource_mark
 
     def log(self, message: str):
         """
@@ -271,7 +279,7 @@ class StrategyAPI:
         ds = self.get_data_source(datasource_mark=datasource_mark)
         ds.sell(order_percent=order_percent, reason=reason, log_callback=self._log, order_type=order_type)
 
-    def close_long(self, datasource_mark: Union[int, str], order_percent: Optional[float] = None, reason: str = "", order_type: str = "bar_close", index: int = 0):
+    def close_long(self, datasource_mark: Union[int, str], entry_price: float, order_percent: Optional[float] = None, reason: str = "", order_type: str = "bar_close", index: int = 0):
         """
         平多
 
@@ -288,9 +296,9 @@ class StrategyAPI:
             index: 数据源索引，默认为0（第一个数据源）
         """
         ds = self.get_data_source(datasource_mark=datasource_mark)
-        ds.close_long(order_percent=order_percent, reason=reason, log_callback=self._log, order_type=order_type)
+        ds.close_long(order_percent=order_percent, entry_price=entry_price, reason=reason, log_callback=self._log, order_type=order_type)
 
-    def close_short(self, datasource_mark: Union[int, str], order_percent: Optional[float] = None, reason: str = "", order_type: str = "bar_close", index: int = 0):
+    def close_short(self, datasource_mark: Union[int, str], entry_price: float, order_percent: Optional[float] = None, reason: str = "", order_type: str = "bar_close", index: int = 0):
         """
         买入平仓（平空）
 
@@ -307,7 +315,7 @@ class StrategyAPI:
             index: 数据源索引，默认为0（第一个数据源）
         """
         ds = self.get_data_source(datasource_mark=datasource_mark)
-        ds.close_short(order_percent=order_percent, reason=reason, log_callback=self._log, order_type=order_type)
+        ds.close_short(order_percent=order_percent, entry_price=entry_price, reason=reason, log_callback=self._log, order_type=order_type)
 
     # def buytocover(self, volume: Optional[int] = None, reason: str = "", order_type: str = "bar_close", index: int = 0):
     #     """

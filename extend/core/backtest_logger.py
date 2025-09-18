@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from loguru import logger
-
+from extend.utils import PathTools
 
 class BacktestLogger:
     """回测日志管理器类，负责处理日志记录、日志文件创建等功能"""
@@ -22,18 +22,15 @@ class BacktestLogger:
             cls._instance.performance_file = None
         return cls._instance
 
-    def __init__(self, debug_mode=False):
+    def __init__(self, debug_mode=False, ):
         """初始化日志管理器"""
         # 更新调试模式
         self.debug_mode = debug_mode
-
-    def set_debug_mode(self, debug_mode):
-        """设置调试模式
-
-        Args:
-            debug_mode: 是否开启调试模式
-        """
-        self.debug_mode = debug_mode
+        if self.debug_mode:
+            if not self.log_file:
+                self.log_file = PathTools.get_log_path().joinpath(f"{datetime.now()}.log")
+        else:
+            self.log_file=None
         self._update_logger_config()
 
     def _update_logger_config(self):
@@ -93,9 +90,10 @@ class BacktestLogger:
         # 检查是否已经有处理器配置
         if not (BacktestLogger._console_handler_id or BacktestLogger._file_handler_id):
             # 如果没有处理器，直接打印
-            print(message)
+            pass
         else:
-            logger.info(message)
+            if self.debug_mode:
+                logger.info(message)
 
     def log_debug(self, message):
         """记录调试消息

@@ -34,14 +34,11 @@ class DataSource:
         self.current_datetime: Optional[str] = None
         self.pending_orders: List[Dict] = []  # 存储待执行的订单
 
-        # 临时变量
-        self.entry_bar: int = 0
-        self.entry_price: float = 0.0
-        self.entry_volume: float = 0.0
 
         # 资产信息
         self.capital: float = 0
         self.available_capital: float = 0
+        self.total_fee: float = 0
         self.comission: float = 0
         self.slippage: float = 0
         self.leverage: int = 0
@@ -94,12 +91,13 @@ class DataSource:
         """设置交易信号原因"""
         self.signal_reason = reason
 
-    def add_trade(self, action: str, bar_index: int = 0, open_price: float = 0.0, close_price: float = 0.0, volume: float = 0.0, reason: str = "", pnl: float = 0.0, datetime=None):
+    def add_trade(self, action: str, bar_index: int = 0, open_price: float = 0.0, close_price: float = 0.0, volume: float = 0.0, reason: str = "", pnl: float = 0.0, datetime=None, fee:float=0.0):
         """添加交易记录"""
         if datetime is None:
             datetime = self.get_current_datetime()
+        current_pos = self.get_current_pos()
 
-        self.trades.append({"datetime": datetime, "bar": bar_index, "action": action, "open_price": open_price, "close_price": close_price, "volume": volume, "reason": reason, "pnl": pnl})
+        self.trades.append({"datetime": datetime, "bar": bar_index, "action": action, "open_price": open_price, "close_price": close_price, "volume": volume, "current_pos": current_pos, "reason": reason, "pnl": pnl, "fee": fee})
 
     def get_price_by_type(self, order_type="bar_close"):
         """
@@ -288,13 +286,14 @@ class DataSource:
             self.frozen_capital += frozen_capital
             volume = frozen_capital / price
             self.target_pos = self.current_pos + volume
-            self.entry_bar = self.current_idx
-            self.entry_price = price
-            self.entry_volume = volume
+
+
+            per_fee = frozen_capital * self.comission
+            self.total_fee += per_fee
             if reason:
                 self.set_signal_reason(reason)
             self._update_pos(log_callback)
-            self.add_trade(action="open long", open_price=price, volume=volume, reason=reason, bar_index=self.current_idx)
+            self.add_trade(action="open long", open_price=price, volume=volume, reason=reason, bar_index=self.current_idx, fee=per_fee)
             return True
         else:
             # 添加到待执行订单
@@ -305,7 +304,7 @@ class DataSource:
                 log_callback(f"{self.symbol} {self.kline_period} add order: order_type:{order_type}|order_percent:{order_percent * 100:.2fype}|predict price:{price_str}|reason:{reason}")
             return True
 
-    def close_long(self, order_percent: Optional[float] = None, reason: str = "", log_callback=None, order_type="bar_close"):
+    def close_long(self, entry_price: float, order_percent: Optional[float] = None, reason: str = "", log_callback=None, order_type="bar_close"):
         """
         平多仓
 
@@ -350,18 +349,20 @@ class DataSource:
             self.frozen_capital -= released_capital
 
             # 计算盈亏
-            pnl = (price - self.entry_price) * volume
+            pnl = (price - entry_price) * volume
             self.realized_pnl += pnl
             self.available_capital += pnl
 
             # 更新持仓
             self.target_pos = self.current_pos - volume
+            per_fee = released_capital * self.comission
+            self.total_fee += per_fee
             if reason:
                 self.set_signal_reason(reason)
             self._update_pos(log_callback)
 
             # 记录交易
-            self.add_trade("close long", open_price=self.entry_price, close_price=price, volume=volume, reason=reason, bar_index=self.current_idx, pnl=pnl)
+            self.add_trade("close long", open_price=entry_price, close_price=price, volume=volume, reason=reason, bar_index=self.current_idx, pnl=pnl, fee=per_fee)
 
             return True
         else:
@@ -403,10 +404,12 @@ class DataSource:
             self.frozen_capital += frozen_capital
             volume = frozen_capital / price
             self.target_pos = self.current_pos - volume
+            per_fee = frozen_capital * self.comission
+            self.total_fee += per_fee
             if reason:
                 self.set_signal_reason(reason)
             self._update_pos(log_callback)
-            self.add_trade(action="open short", open_price=price, volume=volume, reason=reason, bar_index=self.current_idx)
+            self.add_trade(action="open short", open_price=price, volume=volume, reason=reason, bar_index=self.current_idx, fee=per_fee)
             return True
         else:
             # 添加到待执行订单
@@ -417,7 +420,7 @@ class DataSource:
                 log_callback(f"{self.symbol} {self.kline_period} add order: order_type:{order_type}|order_percent:{order_percent * 100:.2fype}|predict price:{price_str}|reason:{reason}")
             return True
 
-    def close_short(self, order_percent: Optional[float] = None, reason: str = "", log_callback=None, order_type="bar_close"):
+    def close_short(self, entry_price: float, order_percent: Optional[float] = None, reason: str = "", log_callback=None, order_type="bar_close"):
         """
         平空仓
 
@@ -468,12 +471,14 @@ class DataSource:
 
             # 更新持仓
             self.target_pos = self.current_pos + volume
+            per_fee = released_capital * self.comission
+            self.total_fee += per_fee
             if reason:
                 self.set_signal_reason(reason)
             self._update_pos(log_callback)
 
             # 记录交易
-            self.add_trade("close short", open_price=self.entry_price, close_price=price, volume=volume, reason=reason, bar_index=self.current_idx, pnl=pnl)
+            self.add_trade("close short", open_price=entry_price, close_price=price, volume=volume, reason=reason, bar_index=self.current_idx, pnl=pnl, fee=per_fee)
 
             return True
         else:
