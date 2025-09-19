@@ -31,4 +31,7 @@ class PathTools:
     @classmethod
     def get_log_path(cls):
         return PathTools.get_root_path().joinpath("output", "logs")
-        
+    
+    @classmethod
+    def get_results_path(cls):
+        return PathTools.get_root_path().joinpath("output", "results")

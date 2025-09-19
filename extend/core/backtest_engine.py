@@ -194,6 +194,34 @@ class MultiSourceBacktester:
         # 计算回测结果
         result_dict = self.result_calculator.generate_report(multi_data_source)
 
+        # 生成quantstats报告（仅在单次回测中生成，优化模式中不生成）
+        if not self._in_optimization_mode and self.base_config.enable_quantstats_report:
+            try:
+                # 提取策略名称用于报告命名
+                strategy_name = func_name if 'func_name' in locals() else "backtest_strategy"
+                
+                quantstats_result = self.report_generator.generate_quantstats_report(
+                    multi_data_source, 
+                    strategy_name=strategy_name,
+                    save_report=True,
+                    include_benchmark=self.base_config.include_benchmark  # 从配置文件读取
+                )
+                
+                if quantstats_result:
+                    self.logger.log_message("quantstats报告生成成功！")
+                    if 'html_report_path' in quantstats_result:
+                        self.logger.log_message(f"HTML报告路径: {quantstats_result['html_report_path']}")
+                    if 'stats_report_path' in quantstats_result:
+                        self.logger.log_message(f"统计报告路径: {quantstats_result['stats_report_path']}")
+                    
+                    # 将quantstats结果添加到结果字典中
+                    result_dict['quantstats_report'] = quantstats_result
+                else:
+                    self.logger.log_message("quantstats报告生成失败或跳过")
+                    
+            except Exception as e:
+                self.logger.log_message(f"生成quantstats报告时出错: {str(e)}")
+
         self._last_multi_data_source = multi_data_source
 
         return result_dict

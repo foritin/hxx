@@ -24,6 +24,7 @@ class Period(str, Enum):
     FIVE_MINUTES = "5m"
     FIFTEEN_MINUTES = "15m"
     THIRTY_MINUTES = "30m"
+    FOUR_HOURS = "4h"
     ONE_HOUR = "1h"
     ONE_DAY = "1d"
 
@@ -43,6 +44,9 @@ class BaseConfig(EnhanceBaseModel):
     save_data: bool = True
     align_data: bool = True
     fill_method: str = "ffill"
+    # Quantstats报告配置
+    enable_quantstats_report: bool = True
+    include_benchmark: bool = True  # 是否在quantstats报告中包含基线对比（买入持有策略）
 
 
 class TradeConfig(EnhanceBaseModel):

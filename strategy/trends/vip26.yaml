@@ -22,15 +22,16 @@ symbol_configs:
     
 
 strategy_params:
-  "M": 60                      # 周期参数
-  "S": 10                      # 加权系数
+  "M": 20                      # 周期参数
+  "S": 20                      # 加权系数
   "Lengs": 30                 # 突破周期
   "Fund": 100000               # 基础资金
   "TrailingStopRate": 60       # 跟踪止损比例
-  "FastLength": 24             # MACD快线周期
-  "SlowLength": 52             # MACD慢线周期
-  "MACDLength": 24              # MACD信号线周期
+  "FastLength": 5             # MACD快线周期
+  "SlowLength": 35             # MACD慢线周期
+  "MACDLength": 52              # MACD信号线周期
   "OrderPercent": 0.3          # 每次交易使用的资金比例
+
 
 optimization_params:
   "M": [20, 40, 60, 80]

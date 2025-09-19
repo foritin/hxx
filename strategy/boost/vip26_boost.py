@@ -9,6 +9,6 @@ backtester = MultiSourceBacktester(config_file_path=config_file_path)
 
 backtester.initialize()
 
-# backtester.run_backtest(strategy_module_path="strategy.trends.vip26.Strategy")
-results = backtester.run_backtest_optimization(strategy_module_path="strategy.trends.vip26.Strategy", max_processes=16)
+backtester.run_backtest(strategy_module_path="strategy.trends.vip26.Strategy")
+# results = backtester.run_backtest_optimization(strategy_module_path="strategy.trends.vip26.Strategy", max_processes=16)
 # print()
